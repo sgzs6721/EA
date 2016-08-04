@@ -38,30 +38,42 @@ void OnDeinit(const int reason)
 void OnTick()
 {
 //---
-    double valueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 1);
-    double valueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 1);
+
+    //checkProfit(100);
+    double currentValueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 0);
+    double currentValueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 0);
     
-    double preValueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 2);
-    double preValueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 2);
+    double valueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 0);
+    double valueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 0);
     
-    
+    double preValueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 1);
+    double preValueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 1);
+       
     
     //buy
-    if(valueOfMaShort > valueOfMaLong && preValueOfMaShort < valueOfMaLong){
+    if(valueOfMaShort > valueOfMaLong && preValueOfMaShort < preValueOfMaLong ){
         //if(orderOperate(OP_BUY, Ask, OP_SELL, Bid) != -1){
         orderOperate(OP_BUY, Ask, OP_SELL, Bid);
             //Print("Buy Success!");
         //}
     }
-    
-    //orderOperate(OP_BUY, Ask, OP_SELL, Bid);
-    
+        
     //sell
-    if(valueOfMaShort < valueOfMaLong && preValueOfMaShort > valueOfMaLong){
+    if(valueOfMaShort < valueOfMaLong && preValueOfMaShort > preValueOfMaLong ){
         //if(orderOperate(OP_SELL, Bid, OP_BUY, Ask) != -1){
         orderOperate(OP_SELL, Bid, OP_BUY, Ask);
             //Print("Sell Success!");
         //}
+    }
+}
+
+void checkProfit(int diff){
+    for(int i = 0; i < OrdersTotal(); i++){
+        if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
+            if(MathAbs(OrderProfit()) > diff * lots){
+                bool x = OrderClose(OrderTicket(),lots,OrderType() == OP_BUY ? Bid : Ask, 50,clrNONE);
+            }
+        }
     }
 }
 

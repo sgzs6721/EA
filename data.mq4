@@ -11,7 +11,9 @@
 input int      loss = 200;
 input int      profit = 1000;
 input double   lots = 1;
-input int      diff = 150;
+input int      diff = 10;
+
+int riseLossPrice = 20;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -43,31 +45,53 @@ void OnTick()
 //---
     for(int i = 0; i < OrdersTotal(); i++){
         if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
-            //Print("Loss Price:" + OrderStopLoss());
-            //Print("Current Price" + Bid);
-            //Print("Profit Price:" + OrderTakeProfit());
-            if(OrderType() == OP_BUYSTOP && OrderStopLoss() - Bid > diff * Point){
-                int counter = 0;
-                while(true){
-                counter++;
-                    if(OrderDelete(OrderTicket(), clrNONE)){
-                        break;
+            if(OrderSymbol() == Symbol()){
+                int orderType = OrderType();
+                if(orderType == OP_BUY){
+                    double buyPrice = OrderOpenPrice();
+                    double gitProfit = Bid - buyPrice;
+                    if(gitProfit > riseLossPrice * Point){
+                        if(OrderModify(OrderTicket(), buyPrice, buyPrice + profit*2/3, OrderTakeProfit(),0,clrNONE)){
+                            riseLossPrice = riseLossPrice * 2 / 3;
+                        }
                     }
-                    if(counter > 3) break;
-                }                
-            }
-            if(OrderType() == OP_SELLSTOP && Bid - OrderStopLoss() > diff * Point){
-                int counter = 0;
-                while(true){
-                counter++;
-                    if(OrderDelete(OrderTicket(), clrNONE)){
-                        break;
+                }
+                if(orderType == OP_SELL){
+                    double sellPrice = OrderOpenPrice();
+                    double gitProfit = sellPrice - Bid;
+                    if(gitProfit > riseLossPrice * Point){
+                        if(OrderModify(OrderTicket(), sellPrice, sellPrice - profit*2/3, OrderTakeProfit(),0,clrNONE)){
+                            riseLossPrice = riseLossPrice * 2 / 3;
+                        }
                     }
-                    if(counter > 3) break;
-                }              
+                }
+                if(orderType == OP_BUYSTOP && OrderStopLoss() - Bid > diff * Point){
+                    OrderCancel(OrderTicket());
+                }
+                if(orderType == OP_SELLSTOP && Bid - OrderStopLoss() > diff * Point){
+                    OrderCancel(OrderTicket());
+                }
             }
         }
     }
 }
+
+bool OrderCancel(int ticket){
+    int counter = 0;
+    bool result = false;
+    while(true){
+        counter++;
+        if(OrderDelete(ticket, clrNONE)){
+            result = true;
+            break;
+        }
+        if(counter > 3){
+            result = false;
+            break;
+        }
+    }
+    return result;
+}
+
 //+------------------------------------------------------------------+
 

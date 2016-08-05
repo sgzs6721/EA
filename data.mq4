@@ -9,24 +9,32 @@
 #property strict
 //--- input parameters
 //input int      loss = 200;
-input int      profit = 1000;
+input int      profit = 2000;
 input double   lots = 1;
 input int      diff = 200;
+input bool     schedule = false;
 
+int order = true;
 int riseLossPrice = 200;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
 {
-//------------
-//| Buy Stop && Sell Stop
-//------------
-
-    int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point,3,Bid,
-                        Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
-    int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
-                        Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+    if(!schedule){
+        int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point,3,Bid,
+                            Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
+        int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
+                            Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+    }
+    /*
+    Print(TimeYear(TimeCurrent()));
+    Print(TimeMonth(TimeCurrent()));
+    Print(TimeDay(TimeCurrent()));
+    Print(TimeHour(TimeCurrent()));
+    Print(TimeMinute(TimeCurrent()));
+    Print(TimeSeconds(TimeCurrent()));
+    */   
     return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
@@ -42,7 +50,23 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
 {
-//---
+//------------------------
+//| Buy Stop && Sell Stop
+//------------------------
+    datetime now = TimeCurrent();
+    if(schedule && order){
+        if(TimeDay(TimeCurrent()) == 5 && TimeHour(TimeCurrent()) == 12
+                   && TimeMinute(TimeCurrent()) == 29 && TimeSeconds(TimeCurrent()) > 45){
+            int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point,3,Bid,
+                            Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
+            int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
+                            Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+            order = false;
+        }
+    }
+//--------------------------------------------
+//| check profit and modify orders' stop loss
+//--------------------------------------------
     for(int i = 0; i < OrdersTotal(); i++){
         if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
             if(OrderSymbol() == Symbol()){
@@ -75,7 +99,9 @@ void OnTick()
         }
     }
 }
-
+//------------------------
+//| Delete order of stop
+//------------------------
 bool OrderCancel(int ticket){
     int counter = 0;
     bool result = false;

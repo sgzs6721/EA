@@ -51,8 +51,8 @@ void OnTick()
                     double buyPrice = OrderOpenPrice();
                     double gitProfit = Bid - buyPrice;
                     if(gitProfit > riseLossPrice * Point){
-                        if(OrderModify(OrderTicket(), buyPrice, buyPrice + profit*2/3, OrderTakeProfit(),0,clrNONE)){
-                            riseLossPrice = riseLossPrice * 2 / 3;
+                        if(OrderModify(OrderTicket(), buyPrice, buyPrice + gitProfit*2/3, OrderTakeProfit(),0,clrNONE)){
+                            riseLossPrice = riseLossPrice * 3 / 2;
                         }
                     }
                 }
@@ -60,8 +60,8 @@ void OnTick()
                     double sellPrice = OrderOpenPrice();
                     double gitProfit = sellPrice - Bid;
                     if(gitProfit > riseLossPrice * Point){
-                        if(OrderModify(OrderTicket(), sellPrice, sellPrice - profit*2/3, OrderTakeProfit(),0,clrNONE)){
-                            riseLossPrice = riseLossPrice * 2 / 3;
+                        if(OrderModify(OrderTicket(), sellPrice, sellPrice - gitProfit*2/3, OrderTakeProfit(),0,clrNONE)){
+                            riseLossPrice = riseLossPrice * 3 / 2;
                         }
                     }
                 }

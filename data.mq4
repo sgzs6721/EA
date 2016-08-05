@@ -8,12 +8,12 @@
 #property version   "1.00"
 #property strict
 //--- input parameters
-input int      loss = 200;
+//input int      loss = 200;
 input int      profit = 1000;
 input double   lots = 1;
-input int      diff = 10;
+input int      diff = 200;
 
-int riseLossPrice = 20;
+int riseLossPrice = 200;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -23,9 +23,9 @@ int OnInit()
 //| Buy Stop && Sell Stop
 //------------
 
-    int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + loss*Point,3,Bid,
+    int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point,3,Bid,
                         Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
-    int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - loss*Point, 3, Ask,
+    int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
                         Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
     return(INIT_SUCCEEDED);
 }

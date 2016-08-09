@@ -16,17 +16,23 @@ input bool     schedule = false;
 
 int order = true;
 int riseLossPrice = 200;
+
+int Profit = profit;
+int Diff   = diff;
+string symbol = Symbol();
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
 {
+    
     if(!schedule){
-        Print("test");
-        int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point, 3, Bid,
-                            Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
-        int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
-                            Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+        if(symbol == "US_OIL"){
+            riseLossPrice = riseLossPrice / 10;
+            Profit = Profit / 10;
+            Diff   = Diff / 10;
+        }
+        sendOrder(Diff, Profit);
     }
 
     return(INIT_SUCCEEDED);
@@ -44,24 +50,20 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
 {
-//------------------------
-//| Buy Stop && Sell Stop
-//------------------------
+//-------------------------------+
+//| Buy Stop && Sell Stop        |
+//-------------------------------+
     datetime now = TimeCurrent();
     if(schedule && order){
         if(TimeDay(TimeCurrent()) == 9 && TimeHour(TimeCurrent()) == 7
                    && TimeMinute(TimeCurrent()) == 59 && TimeSeconds(TimeCurrent()) > 20){
-            Print("xxxx");
-            int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point, 3, Bid,
-                            Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
-            int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
-                            Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+            sendOrder(Diff, Profit);
             order = false;
         }
     }
-//--------------------------------------------
-//| check profit and modify orders' stop loss
-//--------------------------------------------
+//------------------------------------------------+
+//| check profit and modify orders' stop loss     |
+//------------------------------------------------+
     for(int i = 0; i < OrdersTotal(); i++){
         if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
             if(OrderSymbol() == Symbol()){
@@ -94,9 +96,19 @@ void OnTick()
         }
     }
 }
-//------------------------
-//| Delete order of stop
-//------------------------
+//----------------------------------------+
+//| send buy stop and sell stop order     |
+//----------------------------------------+
+void sendOrder(int di, int pro){
+    int buy = OrderSend(symbol, OP_BUYSTOP, lots, Bid + di*Point, 3, Bid,
+                            Ask + pro * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
+    int sell = OrderSend(symbol, OP_SELLSTOP, lots, Ask - di*Point, 3, Ask,
+                            Bid - pro * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+}
+
+//------------------------------------+
+//| Delete order of stop              |
+//------------------------------------+
 bool OrderCancel(int ticket){
     int counter = 0;
     bool result = false;
@@ -115,4 +127,3 @@ bool OrderCancel(int ticket){
 }
 
 //+------------------------------------------------------------------+
-

@@ -9,10 +9,12 @@
 #property strict
 //--- input parameters
 input int      averageType=MODE_SMA;
-input int      appliedPeriod=30;
+input int      appliedPeriod=15;
 input int      shortMa=5;
 input int      longMa= 20;
 input double   lots=0.1;
+
+int riseLossPrice = 200;
 int test = 0;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -40,6 +42,7 @@ void OnTick()
 //---
 
     //checkProfit(100);
+    protectProfit();    
     double currentValueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 0);
     double currentValueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 0);
     
@@ -48,7 +51,8 @@ void OnTick()
     
     double preValueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 1);
     double preValueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 1);
-       
+    
+    fakeCrossFix(valueOfMaShort, valueOfMaLong);
     
     //buy
     if(valueOfMaShort > valueOfMaLong && preValueOfMaShort < preValueOfMaLong ){
@@ -67,11 +71,58 @@ void OnTick()
     }
 }
 
+void fakeCrossFix(double maShort, double maLong){
+    for(int i = 0; i < OrdersTotal(); i++){
+        if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
+            if(Symbol() == OrderSymbol()){
+                if(OrderType() == OP_BUY && maShort < maLong){
+                    if(OrderClose(OrderTicket(), lots, Bid, 50, clrNONE)){
+                        orderOperate(OP_SELL, Bid, OP_BUY, Ask);
+                    }
+                }
+                if(OrderType() == OP_SELL && maShort > maLong){
+                    if(OrderClose(OrderTicket(), lots, Ask, 50, clrNONE)){
+                        orderOperate(OP_BUY, Ask, OP_SELL, Bid);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void checkProfit(int diff){
     for(int i = 0; i < OrdersTotal(); i++){
         if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
-            if(MathAbs(OrderProfit()) > diff * lots){
+            if(Symbol() == OrderSymbol() && MathAbs(OrderProfit()) > diff * lots){
                 bool x = OrderClose(OrderTicket(),lots,OrderType() == OP_BUY ? Bid : Ask, 50,clrNONE);
+            }
+        }
+    }
+}
+
+void protectProfit(){
+    for(int i = 0; i < OrdersTotal(); i++){
+        if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
+            if(OrderSymbol() == Symbol()){
+                int orderType = OrderType();
+                if(orderType == OP_BUY){
+                    double buyPrice = OrderOpenPrice();
+                    double getProfit = Bid - buyPrice;
+                    if(getProfit > riseLossPrice * Point){
+                        if(OrderModify(OrderTicket(), buyPrice, buyPrice + getProfit*3/5, OrderTakeProfit(),0,clrNONE)){
+                            riseLossPrice = riseLossPrice * 2;
+                        }
+                    }
+                }
+                if(orderType == OP_SELL){
+                    double sellPrice = OrderOpenPrice();
+                    double getProfit = sellPrice - Bid;
+                    if(getProfit > riseLossPrice * Point){
+                        if(OrderModify(OrderTicket(), sellPrice, sellPrice - getProfit*3/5, OrderTakeProfit(),0,clrNONE)){
+                            riseLossPrice = riseLossPrice * 2;
+                        }
+                    }
+                }
             }
         }
     }

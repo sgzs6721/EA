@@ -9,9 +9,9 @@
 #property strict
 //--- input parameters
 //input int      loss = 200;
-input int      profit = 2000;
+input int      profit = 1200;
 input double   lots = 1;
-input int      diff = 200;
+input int      diff = 150;
 input bool     schedule = false;
 
 int order = true;
@@ -22,19 +22,13 @@ int riseLossPrice = 200;
 int OnInit()
 {
     if(!schedule){
-        int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point,3,Bid,
+        Print("test");
+        int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point, 3, Bid,
                             Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
         int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
                             Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
     }
-    /*
-    Print(TimeYear(TimeCurrent()));
-    Print(TimeMonth(TimeCurrent()));
-    Print(TimeDay(TimeCurrent()));
-    Print(TimeHour(TimeCurrent()));
-    Print(TimeMinute(TimeCurrent()));
-    Print(TimeSeconds(TimeCurrent()));
-    */   
+
     return(INIT_SUCCEEDED);
 }
 //+------------------------------------------------------------------+
@@ -55,9 +49,10 @@ void OnTick()
 //------------------------
     datetime now = TimeCurrent();
     if(schedule && order){
-        if(TimeDay(TimeCurrent()) == 5 && TimeHour(TimeCurrent()) == 12
-                   && TimeMinute(TimeCurrent()) == 29 && TimeSeconds(TimeCurrent()) > 45){
-            int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point,3,Bid,
+        if(TimeDay(TimeCurrent()) == 9 && TimeHour(TimeCurrent()) == 7
+                   && TimeMinute(TimeCurrent()) == 59 && TimeSeconds(TimeCurrent()) > 20){
+            Print("xxxx");
+            int buy = OrderSend(Symbol(), OP_BUYSTOP, lots, Bid + diff*Point, 3, Bid,
                             Ask + profit * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
             int sell = OrderSend(Symbol(), OP_SELLSTOP, lots, Ask - diff*Point, 3, Ask,
                             Bid - profit * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
@@ -76,7 +71,7 @@ void OnTick()
                     double gitProfit = Bid - buyPrice;
                     if(gitProfit > riseLossPrice * Point){
                         if(OrderModify(OrderTicket(), buyPrice, buyPrice + gitProfit*2/3, OrderTakeProfit(),0,clrNONE)){
-                            riseLossPrice = riseLossPrice * 3 / 2;
+                            riseLossPrice = riseLossPrice * 2;
                         }
                     }
                 }
@@ -85,7 +80,7 @@ void OnTick()
                     double gitProfit = sellPrice - Bid;
                     if(gitProfit > riseLossPrice * Point){
                         if(OrderModify(OrderTicket(), sellPrice, sellPrice - gitProfit*2/3, OrderTakeProfit(),0,clrNONE)){
-                            riseLossPrice = riseLossPrice * 3 / 2;
+                            riseLossPrice = riseLossPrice * 2;
                         }
                     }
                 }

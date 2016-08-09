@@ -9,10 +9,16 @@
 #property strict
 //--- input parameters
 //input int      loss = 200;
-input int      profit = 1200;
+input int      profit = 1500;
 input double   lots = 1;
 input int      diff = 150;
 input bool     schedule = false;
+
+input int      year  = 2016;
+input int      month = 8;
+input int      day   = 9;
+input int      hour  = 17;
+input int      minute = 30;
 
 int order = true;
 int riseLossPrice = 200;
@@ -20,18 +26,18 @@ int riseLossPrice = 200;
 int Profit = profit;
 int Diff   = diff;
 string symbol = Symbol();
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
 {
-    
-    if(!schedule){
-        if(symbol == "US_OIL"){
-            riseLossPrice = riseLossPrice / 10;
-            Profit = Profit / 10;
-            Diff   = Diff / 10;
-        }
+    if(symbol == "US_OIL"){
+        riseLossPrice = riseLossPrice / 10;
+        Profit = Profit / 10;
+        Diff   = Diff / 10;
+    }
+    if(!schedule){        
         sendOrder(Diff, Profit);
     }
 
@@ -55,8 +61,9 @@ void OnTick()
 //-------------------------------+
     datetime now = TimeCurrent();
     if(schedule && order){
-        if(TimeDay(TimeCurrent()) == 9 && TimeHour(TimeCurrent()) == 7
-                   && TimeMinute(TimeCurrent()) == 59 && TimeSeconds(TimeCurrent()) > 20){
+        if(TimeYear(TimeCurrent()) == year && TimeMonth(TimeCurrent()) == month &&
+           TimeDay(TimeCurrent()) == day && TimeHour(TimeCurrent()) == hour &&
+           TimeMinute(TimeCurrent()) == minute - 1 && TimeSeconds(TimeCurrent()) > 44){
             sendOrder(Diff, Profit);
             order = false;
         }

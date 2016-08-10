@@ -37,7 +37,7 @@ int OnInit()
         Profit = Profit / 10;
         Diff   = Diff / 10;
     }
-    if(!schedule){        
+    if(!schedule){
         sendOrder(Diff, Profit);
     }
 
@@ -64,8 +64,8 @@ void OnTick()
         if(TimeYear(TimeCurrent()) == year && TimeMonth(TimeCurrent()) == month &&
            TimeDay(TimeCurrent()) == day && TimeHour(TimeCurrent()) == hour &&
            TimeMinute(TimeCurrent()) == minute - 1 && TimeSeconds(TimeCurrent()) > 44){
-            sendOrder(Diff, Profit);
-            order = false;
+           sendOrder(Diff, Profit);
+           order = false;
         }
     }
 //------------------------------------------------+
@@ -107,10 +107,10 @@ void OnTick()
 //| send buy stop and sell stop order     |
 //----------------------------------------+
 void sendOrder(int di, int pro){
-    int buy = OrderSend(symbol, OP_BUYSTOP, lots, Bid + di*Point, 3, Bid,
-                            Ask + pro * Point, Symbol() + "OP_BUYSTOP" ,0, clrNONE);
-    int sell = OrderSend(symbol, OP_SELLSTOP, lots, Ask - di*Point, 3, Ask,
-                            Bid - pro * Point, Symbol() + "OP_SELLSTOP", 0 ,clrNONE);
+    int buy = OrderSend(symbol, OP_BUYSTOP, lots, Bid + di*Point, 30, Bid,
+                            Ask + pro * Point, symbol + "OP_BUYSTOP", 198, 0, clrNONE);
+    int sell = OrderSend(symbol, OP_SELLSTOP, lots, Ask - di*Point, 30, Ask,
+                            Bid - pro * Point, symbol + "OP_SELLSTOP", 198, 0,clrNONE);
 }
 
 //------------------------------------+

@@ -9,7 +9,7 @@
 #property strict
 //--- input parameters
 input int      averageType=MODE_SMA;
-input int      appliedPeriod=15;
+input int      appliedPeriod=30;
 input int      shortMa=5;
 input int      longMa= 20;
 input double   lots=0.1;
@@ -52,7 +52,7 @@ void OnTick()
     double preValueOfMaShort = iMA(Symbol(),appliedPeriod, shortMa, 0, averageType, PRICE_CLOSE, 1);
     double preValueOfMaLong  = iMA(Symbol(),appliedPeriod, longMa, 0, averageType, PRICE_CLOSE, 1);
     
-    fakeCrossFix(valueOfMaShort, valueOfMaLong);
+    //fakeCrossFix(valueOfMaShort, valueOfMaLong);
     
     //buy
     if(valueOfMaShort > valueOfMaLong && preValueOfMaShort < preValueOfMaLong ){

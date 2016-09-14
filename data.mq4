@@ -14,11 +14,7 @@ input double   lots = 1;
 input int      diff = 150;
 input bool     schedule = false;
 
-input int      year  = 2016;
-input int      month = 8;
-input int      day   = 9;
-input int      hour  = 17;
-input int      minute = 30;
+input string scheduleTime = "2016.09.13 20:20:20";
 
 int order = true;
 int riseLossPrice = 200;
@@ -59,11 +55,11 @@ void OnTick()
 //-------------------------------+
 //| Buy Stop && Sell Stop        |
 //-------------------------------+
-    datetime now = TimeCurrent();
+    
     if(schedule && order){
-        if(TimeYear(TimeCurrent()) == year && TimeMonth(TimeCurrent()) == month &&
-           TimeDay(TimeCurrent()) == day && TimeHour(TimeCurrent()) == hour &&
-           TimeMinute(TimeCurrent()) == minute - 1 && TimeSeconds(TimeCurrent()) > 44){
+        datetime now = TimeCurrent();
+        datetime timeDiff = StrToTime(scheduleTime) - now;
+        if( TimeMinute(timeDiff) == 0 && TimeSeconds(timeDiff) < 15 ){
            sendOrder(Diff, Profit);
            order = false;
         }

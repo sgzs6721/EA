@@ -22,6 +22,8 @@ int riseLossPrice = 200;
 int Profit = profit;
 int Diff   = diff;
 string symbol = Symbol();
+int needCancel = 0;
+int orderTicket[2];
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -55,7 +57,6 @@ void OnTick()
 //-------------------------------+
 //| Buy Stop && Sell Stop        |
 //-------------------------------+
-    
     if(schedule && order){
         datetime now = TimeCurrent();
         datetime timeDiff = StrToTime(scheduleTime) - now;
@@ -64,14 +65,17 @@ void OnTick()
            order = false;
         }
     }
+    
 //------------------------------------------------+
 //| check profit and modify orders' stop loss     |
 //------------------------------------------------+
     for(int i = 0; i < OrdersTotal(); i++){
         if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES)){
-            if(OrderSymbol() == Symbol()){
+            if(OrderSymbol() == symbol){
                 int orderType = OrderType();
                 if(orderType == OP_BUY){
+                    OrderCancel(orderTicket[1]);
+                    needCancel = 1;
                     double buyPrice = OrderOpenPrice();
                     double gitProfit = Bid - buyPrice;
                     if(gitProfit > riseLossPrice * Point){
@@ -81,6 +85,8 @@ void OnTick()
                     }
                 }
                 if(orderType == OP_SELL){
+                    OrderCancel(orderTicket[0]);
+                    needCancel = 1;
                     double sellPrice = OrderOpenPrice();
                     double gitProfit = sellPrice - Bid;
                     if(gitProfit > riseLossPrice * Point){
@@ -89,24 +95,50 @@ void OnTick()
                         }
                     }
                 }
+                /*                
                 if(orderType == OP_BUYSTOP && OrderStopLoss() - Bid > diff * Point){
                     OrderCancel(OrderTicket());
                 }
                 if(orderType == OP_SELLSTOP && Bid - OrderStopLoss() > diff * Point){
                     OrderCancel(OrderTicket());
                 }
+                */
             }
         }
     }
+    expiration(10);
 }
 //----------------------------------------+
 //| send buy stop and sell stop order     |
 //----------------------------------------+
 void sendOrder(int di, int pro){
-    int buy = OrderSend(symbol, OP_BUYSTOP, lots, Bid + di*Point, 30, Bid,
+    int buy  = -1;
+    int sell = -1;
+    int times = 0;
+    while(buy == -1){
+        times = times + 1;
+        if(times > 3){
+            return;
+        }
+        buy = OrderSend(symbol, OP_BUYSTOP, lots, Bid + di*Point, 30, Bid,
                             Ask + pro * Point, symbol + "OP_BUYSTOP", 198, 0, clrNONE);
-    int sell = OrderSend(symbol, OP_SELLSTOP, lots, Ask - di*Point, 30, Ask,
+        
+    }
+    orderTicket[0] = buy;
+    times = 0;
+    while(sell == -1){
+        times = times + 1;
+        if(times > 3){
+            if(buy != -1){
+                OrderCancel(buy);
+            }
+            return;
+        }
+        sell = OrderSend(symbol, OP_SELLSTOP, lots, Ask - di*Point, 30, Ask,
                             Bid - pro * Point, symbol + "OP_SELLSTOP", 198, 0,clrNONE);
+        
+    }
+    orderTicket[1] = sell;
 }
 
 //------------------------------------+
@@ -127,6 +159,16 @@ bool OrderCancel(int ticket){
         }
     }
     return result;
+}
+
+void expiration(int expirationTime){
+    datetime now = TimeCurrent();
+    datetime timeDiff = StrToTime(scheduleTime) - now;
+    if(needCancel == 0 && order == false && TimeSeconds(timeDiff) > expirationTime ){
+        for(int i = 0; i < 2; i++){
+            OrderCancel(orderTicket[i]);
+        }
+    }
 }
 
 //+------------------------------------------------------------------+

@@ -11,18 +11,19 @@
 //input int      loss = 200;
 input int      profit = 1500;
 input double   lots = 1;
-input int      diff = 150;
-input bool     schedule = false;
+input int      diff = 180;
+input bool     schedule = true;
 
-input string scheduleTime = "2016.09.13 20:20:20";
+input string scheduleTime = "2018.07.26 14:45:00";
 
-int order = true;
+bool order = true;
+bool terminated = false;
+
 int riseLossPrice = 200;
 
 int Profit = profit;
 int Diff   = diff;
 string symbol = Symbol();
-int needCancel = 0;
 int orderTicket[2];
 
 //+-----------------------------------------------------------------+
@@ -60,7 +61,7 @@ void OnTick()
     if(schedule && order){
         datetime now = TimeCurrent();
         datetime timeDiff = StrToTime(scheduleTime) - now;
-        if( TimeMinute(timeDiff) == 0 && TimeSeconds(timeDiff) < 15 ){
+        if( TimeMinute(timeDiff) == 0 && TimeSeconds(timeDiff) < 5 ){
            sendOrder(Diff, Profit);
            order = false;
         }
@@ -75,7 +76,6 @@ void OnTick()
                 int orderType = OrderType();
                 if(orderType == OP_BUY){
                     OrderCancel(orderTicket[1]);
-                    needCancel = 1;
                     double buyPrice = OrderOpenPrice();
                     double gitProfit = Bid - buyPrice;
                     if(gitProfit > riseLossPrice * Point){
@@ -86,7 +86,6 @@ void OnTick()
                 }
                 if(orderType == OP_SELL){
                     OrderCancel(orderTicket[0]);
-                    needCancel = 1;
                     double sellPrice = OrderOpenPrice();
                     double gitProfit = sellPrice - Bid;
                     if(gitProfit > riseLossPrice * Point){
@@ -95,18 +94,10 @@ void OnTick()
                         }
                     }
                 }
-                /*                
-                if(orderType == OP_BUYSTOP && OrderStopLoss() - Bid > diff * Point){
-                    OrderCancel(OrderTicket());
-                }
-                if(orderType == OP_SELLSTOP && Bid - OrderStopLoss() > diff * Point){
-                    OrderCancel(OrderTicket());
-                }
-                */
             }
         }
     }
-    expiration(10);
+    expiration();
 }
 //----------------------------------------+
 //| send buy stop and sell stop order     |
@@ -161,14 +152,20 @@ bool OrderCancel(int ticket){
     return result;
 }
 
-void expiration(int expirationTime){
+void expiration(){
     datetime now = TimeCurrent();
-    datetime timeDiff = StrToTime(scheduleTime) - now;
-    if(needCancel == 0 && order == false && TimeSeconds(timeDiff) > expirationTime ){
-        for(int i = 0; i < 2; i++){
-            OrderCancel(orderTicket[i]);
-        }
+    datetime timeDiff = now - StrToTime(scheduleTime);
+    if(order == false && TimeSeconds(timeDiff) > 15 && TimeSeconds(timeDiff) < 45){
+       for(int i=0; i<OrdersTotal(); i++){
+          if(OrderSelect(i,SELECT_BY_POS,MODE_TRADES)){
+              int cmd=OrderType();
+              if(OrderSymbol() == symbol && cmd!=OP_BUY && cmd!=OP_SELL){
+                  OrderCancel(OrderTicket());
+              }
+          }    
+       }
     }
 }
+
 
 //+------------------------------------------------------------------+
